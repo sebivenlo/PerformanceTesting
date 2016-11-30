@@ -7,7 +7,7 @@ Measuring the actual performance of code can be difficult to do. In addition, mo
 
 ## The Problem
 I want to measure how often a function is called or how long a method call takes.
-**But:** I dont want to modify my existing business logic. This problem is called "Cross-cutting concern".
+**But:** I don't want to modify my existing business logic. This problem is called "Cross-cutting concern".
 
 ## Scenario
 Lets think about a scenario here. You have an existing webservice that does some heavy computations. As more and more users access this service, the responses get slow. You want to find out what is taking so long.
@@ -15,7 +15,7 @@ Lets think about a scenario here. You have an existing webservice that does some
 **Solution: Logging**
 
 ## Step 1
-Lets asume we have this webservice.
+Lets assume we have this webservice.
 
 ```java
 import java.util.Random;
@@ -54,7 +54,7 @@ public class Main {
 }
 ```
 Create these classes in whatever editor you like and run the main **several times**. (It is recommended to already create a maven project because we need maven later.)
-Notice the total time is takes to run varies from notime to ~ 3 seconds.
+Notice the total time is takes to run varies from no time to ~ 3 seconds.
 
 ## Step 2
 Now try to find out why sometimes it takes up to 3 times as long. These lines could help.
@@ -71,7 +71,7 @@ However, we modified the actual source code of the implementation in order to al
 **-> Not desired**
 
 ## Aspect oriented programming (AOP)
-Aspect oriented programming is a mechanism of seperating cross-cuting concerns. It allows to add additional behavior to existing code, without modifying the code itself.
+Aspect oriented programming is a mechanism of separating cross-cuting concerns. It allows to add additional behavior to existing code, without modifying the code itself.
 
 
 ## Step 3
@@ -117,7 +117,7 @@ Now, because we have created a maven project in Step 1, we can make use of some 
 
 * build with dependencies
 * create a folder called `resources` in projectRoot/src/main/
-* create an xml file in this folder with an arbritary name
+* create an xml file in this folder with an arbitrary name
 * give it this content:
 
 ```xml
@@ -139,7 +139,7 @@ Now, because we have created a maven project in Step 1, we can make use of some 
 </beans>
 ```
 
-* replace packagename with the name of your actual package
+* replace package name with the name of your actual package
 * create a package called `logging` in `Source packages`
 * create a class called `LoggingAspect` in the `logging` package
 
@@ -165,12 +165,12 @@ import org.aspectj.lang.annotation.*;
 * Annotate the class with `@Aspect`
 * create `public void logBeforeGetAwesomeData()`
 * annotate this method with `@Before("execution(* packagename.AwesomeWebService.getAwesomeData(..))")`
-	* replace packagename with the name of your actual package
+	* replace package name with the name of your actual package
 * now you can wrote some logging in the `logBeforeGetAwesomeData ` method
-* it should apear on the console before the result `AwesomeWebService.getAwesomeData`
+* it should appear on the console before the result `AwesomeWebService.getAwesomeData`
 
 * add a similar annotation (think about the annotation keyword to use) to a new method `public void logAfterGetAwesomeData()`
-* see when logging of this method apears in the console
+* see when logging of this method appears in the console
 
 We can use these two methods to measure how long a method executes. Just start a timer in the `Before` and stop it in the `After`. Try it out!
 
@@ -187,7 +187,7 @@ Yes there is.
 	* store the result of this on an `Object result` and return this at the end of the function
 	* think about why it throws a Throwable ?
 	* think about what `result` contains ?
-* implement the same time logging as you did with the two seperate functions at the end of Step 4 (and uncomment them to prevent log diarrhea ;) )
+* implement the same time logging as you did with the two separate functions at the end of Step 4 (and uncomment them to prevent log diarrhea ;) )
 
 ## Step 6
 
