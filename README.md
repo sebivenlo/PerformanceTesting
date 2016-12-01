@@ -1,5 +1,5 @@
 # Performance testing workshop
-Ever wondered how fast your code actually is or how "good" a certain algorith solves a problem compared to an other.
+Ever wondered how fast your code actually is or how "good" a certain algorithm solves a problem compared to an other.
 
 > "Trust is good, but control is better." (Vladimir Lenin)
 
@@ -10,7 +10,7 @@ I want to measure how often a function is called or how long a method call takes
 **But:** I don't want to modify my existing business logic. This problem is called "Cross-cutting concern".
 
 ## Scenario
-Lets think about a scenario here. You have an existing webservice that does some heavy computations. As more and more users access this service, the responses get slow. You want to find out what is taking so long.
+Let's think about a scenario here. You have an existing webservice that does some heavy computations. As more and more users access this service, the responses get slow. You want to find out what is taking so long.
 
 **Solution: Logging**
 
@@ -53,16 +53,16 @@ public class Main {
     }
 }
 ```
-Create these classes in whatever editor you like and run the main **several times**. (It is recommended to already create a maven project because we need maven later.)
-Notice the total time is takes to run varies from no time to ~ 3 seconds.
+Create these classes in whatever editor you like and run the main **several times**. (It is recommended to already create a Maven project because we need Maven later.)
+Notice that the total time it takes to run can vary from 0 to ~ 4 seconds.
 
 ## Step 2
 Now try to find out why sometimes it takes up to 3 times as long. These lines could help.
 
 ```java
-	private int expensiceMethodCounter;
+	private int expensiveMethodCounter;
 	expensiveMethodCounter++;
-	System.out.println("Expensice method ran " + expensiveMethodCounter + " times.");
+	System.out.println("Expensive method ran " + expensiveMethodCounter + " times.");
 ```
 
 We now identified that there is some code which is called quite often sometimes and can take a long time.
@@ -71,14 +71,14 @@ However, we modified the actual source code of the implementation in order to al
 **-> Not desired**
 
 ## Aspect oriented programming (AOP)
-Aspect oriented programming is a mechanism of separating cross-cuting concerns. It allows to add additional behavior to existing code, without modifying the code itself.
+Aspect oriented programming is a mechanism of separating cross-cutting concerns. It allows to add additional behavior to existing code, without modifying the code itself.
 
 
 ## Step 3
-Now, because we have created a maven project in Step 1, we can make use of some magic. (Not actual magic, but maven)
+Now, because we have created a Maven project in Step 1, we can make use of some magic. (Not actual magic, but Maven)
 
-* Delete the three lines added in Step 2.
-* Add the following maven dependencies to the pom file:
+* Delete the three lines added in Step 2
+* Add the following Maven dependencies to the POM file:
 
 ```xml
 <dependencies>
@@ -115,10 +115,10 @@ Now, because we have created a maven project in Step 1, we can make use of some 
 </dependencies>
 ```
 
-* build with dependencies
-* create a folder called `resources` in projectRoot/src/main/
-* create an xml file in this folder with an arbitrary name
-* give it this content:
+* Build project with dependencies
+* Create a folder called `resources` in `<projectRoot>/src/main/`
+* Create an XML file in this folder with an arbitrary name
+* Give it this content:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -135,24 +135,24 @@ Now, because we have created a maven project in Step 1, we can make use of some 
     <bean id="awesomeWebService" class="packagename.AwesomeWebService"/>
 
     <!-- Aspect -->
-    <bean id="loggingAspect" class="logging.LoggingAspect" />
+    <bean id="loggingAspect" class="logging.LoggingAspect"/>
 </beans>
 ```
 
-* replace package name with the name of your actual package
-* create a package called `logging` in `Source packages`
-* create a class called `LoggingAspect` in the `logging` package
+* Replace `packagename` with the name of your actual package
+* Create a package called `logging` in `Source packages`
+* Create a class called `LoggingAspect` in the `logging` package
 
-Now you have the base to start using AOP.
+Now you have the basic setup to start using AOP.
 
 ## Step 4
-Now we will make use of the spring AOP framework that we just added via maven.
+Now we will make use of the spring AOP framework that we just added via Maven.
 
 ##### Main class
-* add `ApplicationContext appContext = new ClassPathXmlApplicationContext("example.xml");` as the first line in the main method
-	* replace example with the name of your xml file
-* now we have to get the bean that knows about AOP and use it as out webservice
-* replace the constructor call of AwesomeWebService with `appContext.getBean("awesomeWebService");` and cast the result to an `AwesomeWebService`
+* Add `ApplicationContext appContext = new ClassPathXmlApplicationContext("example.xml");` as the first line in the main method
+	* Replace example with the name of your XML file
+* Now we have to get the bean that knows about AOP and use it as our webservice
+* Replace the constructor call of `AwesomeWebService` with `appContext.getBean("awesomeWebService");` and cast the result to an `AwesomeWebService`
 
 
 ##### LoggingAspect class
@@ -163,44 +163,47 @@ import org.aspectj.lang.annotation.*;
 ```
 
 * Annotate the class with `@Aspect`
-* create `public void logBeforeGetAwesomeData()`
-* annotate this method with `@Before("execution(* packagename.AwesomeWebService.getAwesomeData(..))")`
-	* replace package name with the name of your actual package
-* now you can wrote some logging in the `logBeforeGetAwesomeData ` method
-* it should appear on the console before the result `AwesomeWebService.getAwesomeData`
+* Create `public void logBeforeGetAwesomeData()`
+* Annotate this method with `@Before("execution(* packagename.AwesomeWebService.getAwesomeData(..))")`
+	* Replace package name with the name of your actual package
+* Now you can write some logging in the `logBeforeGetAwesomeData ` method
+* It should appear in the console before the result of `AwesomeWebService.getAwesomeData`
 
-* add a similar annotation (think about the annotation keyword to use) to a new method `public void logAfterGetAwesomeData()`
-* see when logging of this method appears in the console
+* Add a similar annotation (think about the annotation keyword to use) to a new method `public void logAfterGetAwesomeData()`
+* See when logging of this method appears in the console
 
 We can use these two methods to measure how long a method executes. Just start a timer in the `Before` and stop it in the `After`. Try it out!
 
 
 ## Step 5
-
-This all sounds a bit complicated. Is there an easier way of doing this ?
+This all sounds a bit complicated. Is there an easier way of doing this?
 Yes there is.
 
-* create `public Object logAroundGetAwesomeData()`
-* annotate it as the before and after (think about the annotation keyword to use)
-* add `ProceedingJoinPoint joinPoint` as a parameter
-* the before and after functionality is split by the line `joinPoint.proceed();`
-	* store the result of this on an `Object result` and return this at the end of the function
-	* think about why it throws a Throwable ?
-	* think about what `result` contains ?
-* implement the same time logging as you did with the two separate functions at the end of Step 4 (and uncomment them to prevent log diarrhea ;) )
+* Create `public Object logAroundGetAwesomeData() throws Throwable`
+* Annotate it as the before and after (think about the annotation keyword to use)
+* Add `ProceedingJoinPoint joinPoint` as a parameter
+* The before and after functionality is split by the line `joinPoint.proceed();`
+	* Store the result of this on an `Object result` and return this at the end of the function
+	* Think about why it throws a `Throwable`?
+	* Think about what `result` contains?
+* Implement the same time-logging as you did with the two separate functions at the end of Step 4 (and uncomment them to prevent log diarrhea &#9786; )
 
 ## Step 6 (Advanced)
 This is fine for measuring and testing one method. It also allows for more sophisticated things like measuring how often a method has been executed. But there is one limitation to this.
 
-Lets assume we extend our webservice with a method that does some more elaborate calculations and fetches more data etc etc. It could look something like this:
+Let's assume we extend our webservice with a method that does some more elaborate calculations and fetches more data, etc. It could look something like this:
 
 ```java
-private void magicMethod() {
+public void magicMethod() {
   //magical things happen here
+  try {
+    Thread.sleep(random.nextInt(10) + 5);
+  } catch (InterruptedException ex) {
+  }
 }
 ```
 
-which we would use like this in out `getAwesomeData`
+Which we would use like this in our `getAwesomeData`
 
 ```java
 for (int i = 0; i < runs; i++) {
@@ -209,26 +212,16 @@ for (int i = 0; i < runs; i++) {
 }
 ```
 
-If we now want to also log and measure the `magicMethod`, we will run into some problems. The reason for this is the base upon the object which our two methods are called on. In the `main` method, we defied out bean which is aware of the AOP and call the `getAwesomeData` method this this bean. This bean acts as a proxy to our actual `AwesomeWebService` object and allows the magic of AOP to happen.
+If we now want to also log and measure the `magicMethod`, we will run into some problems. In the `main` method, we defined our bean which is aware of the AOP and call the `getAwesomeData` method on this bean. This bean acts as a proxy to our actual `AwesomeWebService` object and allows the magic of AOP to happen.
 
-Calling a method with `magicMethod();` is logically the same as calling it with `this.magicMethod()`. Because this is the case, we can not easily use AOP on a method that is called inside another method. This is because the proxy is not the same as `this` inside the `AwesomeWebService`.
+Calling a method as `magicMethod();` is logically the same as calling it as `this.magicMethod()`. Because this is the case, we can not easily use AOP on a method that is called inside another method. This is because the proxy bean is not the same as `this` inside the `AwesomeWebService`.
 
-So in order to allow AOP to work on methods called by other methods, we need to delegate the method call to the proxy as well. Not nice because strictly speaking, we now modify the business logic.
+So in order to allow AOP to work with methods that are called by other methods, we need to delegate the method call to the proxy as well. Not nice because strictly speaking, we now modify the business logic. But at least the code is now not being polluted as much as with the earlier solution.
 
-In order to use this, we now add a few things to the `AwesomeWebService`.
+In order to use this, we need to add a proxy to the `AwesomeWebService`.
 
 ```java
-//Field
 private AwesomeWebService proxy = this;
-
-//Method
-public void magicMethod() {
-  //magical things happen here
-  try {
-      Thread.sleep(random.nextInt(10) + 5);
-    } catch (InterruptedException ex) {
-    }
-}
 ```
 
 The next step is to replace the virtual `this` with the proxy object when calling functions.
@@ -245,7 +238,7 @@ The last step is to set the proxy Object in the `main` method.
 ```java
 webService.setProxy(webService);
 ```
-Now we can add methods for `before`, `after`, etc. of magicMethod in the `LoggingAspect`.
+Now we can add methods for `before`, `after`, etc. of `magicMethod` in the `LoggingAspect`.
 The only thing we need to change is the parameter of the annotation to use the new method instead.
 
 **Task:** Build a mechanism for counting how often `magicMethod` has been executed.
@@ -259,4 +252,4 @@ This means unfortunately private methods are not supported with the Spring frame
 
 ---
 ##### ALDA project
-The netbeans project for Mr. van Odenhoven can be found [here](https://www.fontysvenlo.org/svnp/2310309/sortingPerformance).
+The NetBeans project for Mr. van Odenhoven can be found [here](https://www.fontysvenlo.org/svnp/2310309/sortingPerformance).
