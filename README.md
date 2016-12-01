@@ -189,10 +189,73 @@ Yes there is.
 	* think about what `result` contains ?
 * implement the same time logging as you did with the two separate functions at the end of Step 4 (and uncomment them to prevent log diarrhea ;) )
 
-## Step 6
+## Step 6 (Advanced)
+This is fine for measuring and testing one method. It also allows for more sophisticated things like measuring how often a method has been executed. But there is one limitation to this.
 
-* Proxy
-* call method on proxy instead of this in business logic
+Lets assume we extend our webservice with a method that does some more elaborate calculations and fetches more data etc etc. It could look something like this:
+
+```java
+private void magicMethod() {
+  //magical things happen here
+}
+```
+
+which we would use like this in out `getAwesomeData`
+
+```java
+for (int i = 0; i < runs; i++) {
+  //Simulate expensive method
+  magicMethod();
+}
+```
+
+If we now want to also log and measure the `magicMethod`, we will run into some problems. The reason for this is the base upon the object which our two methods are called on. In the `main` method, we defied out bean which is aware of the AOP and call the `getAwesomeData` method this this bean. This bean acts as a proxy to our actual `AwesomeWebService` object and allows the magic of AOP to happen.
+
+Calling a method with `magicMethod();` is logically the same as calling it with `this.magicMethod()`. Because this is the case, we can not easily use AOP on a method that is called inside another method. This is because the proxy is not the same as `this` inside the `AwesomeWebService`.
+
+So in order to allow AOP to work on methods called by other methods, we need to delegate the method call to the proxy as well. Not nice because strictly speaking, we now modify the business logic.
+
+In order to use this, we now add a few things to the `AwesomeWebService`.
+
+```java
+//Field
+private AwesomeWebService proxy = this;
+
+//Method
+public void magicMethod() {
+  //magical things happen here
+  try {
+      Thread.sleep(random.nextInt(10) + 5);
+    } catch (InterruptedException ex) {
+    }
+}
+```
+
+The next step is to replace the virtual `this` with the proxy object when calling functions.
+
+```java
+for (int i = 0; i < runs; i++) {
+  //Simulate expensive method
+  proxy.magicMethod();
+}
+```
+
+The last step is to set the proxy Object in the `main` method.
+
+```java
+webService.setProxy(webService);
+```
+Now we can add methods for `before`, `after`, etc. of magicMethod in the `LoggingAspect`.
+The only thing we need to change is the parameter of the annotation to use the new method instead.
+
+**Task:** Build a mechanism for counting how often `magicMethod` has been executed.
+
+---
+
+#### Limitations
+> If your interception needs include protected/private methods or even constructors, consider the use of Spring-driven native AspectJ weaving instead of Spring's proxy-based AOP framework. This constitutes a different mode of AOP usage with different characteristics, so be sure to make yourself familiar with weaving first before making a decision.
+
+This means unfortunately private methods are not supported with the Spring framework and more sophisticated means are required.
 
 ---
 ##### ALDA project
