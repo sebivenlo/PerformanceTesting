@@ -238,7 +238,7 @@ The last step is to set the proxy Object in the `main` method.
 ```java
 webService.setProxy(webService);
 ```
-Now we can add methods for `before`, `after`, etc. of `magicMethod` in the `LoggingAspect`.
+Now we can add `before`, `after`, etc. methods for `magicMethod` in the `LoggingAspect`.
 The only thing we need to change is the parameter of the annotation to use the new method instead.
 
 **Task:** Build a mechanism for counting how often `magicMethod` has been executed.
