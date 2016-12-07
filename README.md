@@ -181,7 +181,7 @@ This all sounds a bit complicated. Is there an easier way of doing this?
 Yes there is.
 
 * Create `public Object logAroundGetAwesomeData() throws Throwable`
-* Annotate it as the before and after (think about the annotation keyword to use)
+* Annotate it with `@Around`
 * Add `ProceedingJoinPoint joinPoint` as a parameter
 * The before and after functionality is split by the line `joinPoint.proceed();`
 	* Store the result of this on an `Object result` and return this at the end of the function
@@ -249,6 +249,8 @@ The only thing we need to change is the parameter of the annotation to use the n
 
 #### Limitations
 > If your interception needs include protected/private methods or even constructors, consider the use of Spring-driven native AspectJ weaving instead of Spring's proxy-based AOP framework. This constitutes a different mode of AOP usage with different characteristics, so be sure to make yourself familiar with weaving first before making a decision.
+
+https://en.wikipedia.org/wiki/Aspect_weaver#Weaving_in_AspectJ
 
 http://docs.spring.io/spring/docs/current/spring-framework-reference/html/aop.html#aop-pointcuts-designators
 
