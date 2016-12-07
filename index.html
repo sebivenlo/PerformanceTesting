@@ -226,7 +226,8 @@ Yes there is.</p>
 <ul>
 <li>Create <code>public Object logAroundGetAwesomeData() throws Throwable</code>
 </li>
-<li>Annotate it as the before and after (think about the annotation keyword to use)</li>
+<li>Annotate it with <code>@Around</code>
+</li>
 <li>Add <code>ProceedingJoinPoint joinPoint</code> as a parameter</li>
 <li>The before and after functionality is split by the line <code>joinPoint.proceed();</code>
 
