@@ -53,8 +53,7 @@ public class Main {
     }
 }
 ```
-Create these classes in whatever editor you like and run the main **several times**. (It is recommended to already create a Maven project because we need Maven later.)
-Notice that the total time it takes to run can vary from 0 to ~ 4 seconds.
+Create a maven project with these classes in whatever editor you like and run the main **several times**. Notice that the total time it takes to run can vary from 0 to ~ 4 seconds.
 
 ## Step 2
 Now try to find out why sometimes it takes up to 3 times as long. These lines could help.
@@ -117,7 +116,7 @@ Now, because we have created a Maven project in Step 1, we can make use of some 
 
 * Build project with dependencies
 * Create a folder called `resources` in `<projectRoot>/src/main/`
-* Create an XML file in this folder with an arbitrary name
+* Create an XML file `context.xml` in this folder
 * Give it this content:
 
 ```xml
@@ -149,7 +148,7 @@ Now you have the basic setup to start using AOP.
 Now we will make use of the spring AOP framework that we just added via Maven.
 
 ##### Main class
-* Add `ApplicationContext appContext = new ClassPathXmlApplicationContext("example.xml");` as the first line in the main method
+* Add `ApplicationContext appContext = new ClassPathXmlApplicationContext("context.xml");` as the first line in the main method
 	* Replace example with the name of your XML file
 * Now we have to get the bean that knows about AOP and use it as our webservice
 * Replace the constructor call of `AwesomeWebService` with `appContext.getBean("awesomeWebService");` and cast the result to an `AwesomeWebService`
@@ -185,6 +184,7 @@ Yes there is.
 * The before and after functionality is split by the line `joinPoint.proceed();`
 	* Store the result of this on an `Object result` and return this at the end of the function
 	* Think about why it throws a `Throwable`?
+  * Catch the `Throwable`, make sure your business logic continues (stop timers, log message) and then rethrow the exception
 	* Think about what `result` contains?
 * Implement the same time-logging as you did with the two separate functions at the end of Step 4 (and uncomment them to prevent log diarrhea &#9786; )
 
