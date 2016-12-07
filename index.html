@@ -74,16 +74,18 @@
     }
 }</pre></div>
 
-<p>Create a maven project with these classes in whatever editor you like and run the main <strong>several times</strong>. Notice that the total time it takes to run can vary from 0 to ~ 4 seconds.</p>
+<p>Create a maven java application project with these classes in whatever editor you like and run the main <strong>several times</strong>. Notice that the total time it takes to run can vary from 0 to ~ 4 seconds.</p>
 
 <h2>
 <a id="step-2" class="anchor" href="#step-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 2</h2>
 
-<p>Now try to find out why sometimes it takes up to 3 times as long. These lines could help.</p>
+<p>Now try to find out why sometimes it takes up to 3 times as long. These statements could help. They are to be used at different places in the code.</p>
 
-<div class="highlight highlight-source-java"><pre>    <span class="pl-k">private</span> <span class="pl-k">int</span> expensiveMethodCounter;
-    expensiveMethodCounter<span class="pl-k">++</span>;
-    <span class="pl-smi">System</span><span class="pl-k">.</span>out<span class="pl-k">.</span>println(<span class="pl-s"><span class="pl-pds">"</span>Expensive method ran <span class="pl-pds">"</span></span> <span class="pl-k">+</span> expensiveMethodCounter <span class="pl-k">+</span> <span class="pl-s"><span class="pl-pds">"</span> times.<span class="pl-pds">"</span></span>);</pre></div>
+<div class="highlight highlight-source-java"><pre><span class="pl-k">private</span> <span class="pl-k">int</span> expensiveMethodCounter;</pre></div>
+
+<div class="highlight highlight-source-java"><pre>expensiveMethodCounter<span class="pl-k">++</span>;</pre></div>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-smi">System</span><span class="pl-k">.</span>out<span class="pl-k">.</span>println(<span class="pl-s"><span class="pl-pds">"</span>Expensive method ran <span class="pl-pds">"</span></span> <span class="pl-k">+</span> expensiveMethodCounter <span class="pl-k">+</span> <span class="pl-s"><span class="pl-pds">"</span> times.<span class="pl-pds">"</span></span>);</pre></div>
 
 <p>We now identified that there is some code which is called quite often sometimes and can take a long time.</p>
 
@@ -181,12 +183,7 @@
 <a id="main-class" class="anchor" href="#main-class" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Main class</h5>
 
 <ul>
-<li>Add <code>ApplicationContext appContext = new ClassPathXmlApplicationContext("context.xml");</code> as the first line in the main method
-
-<ul>
-<li>Replace example with the name of your XML file</li>
-</ul>
-</li>
+<li>Add <code>ApplicationContext appContext = new ClassPathXmlApplicationContext("context.xml");</code> as the first line in the main method</li>
 <li>Now we have to get the bean that knows about AOP and use it as our webservice</li>
 <li>Replace the constructor call of <code>AwesomeWebService</code> with <code>appContext.getBean("awesomeWebService");</code> and cast the result to an <code>AwesomeWebService</code>
 </li>
@@ -218,7 +215,7 @@
 <li>See when logging of this method appears in the console</li>
 </ul>
 
-<p>We can use these two methods to measure how long a method executes. Just start a timer in the <code>Before</code> and stop it in the <code>After</code>. Try it out!</p>
+<p>We can use these two methods to measure how long a method executes. Just start a timer in the <code>Before</code> and stop it in the <code>After</code>. Try it out! <a href="https://docs.oracle.com/javase/7/docs/api/java/lang/System.html#nanoTime()">This</a> can help you.</p>
 
 <h2>
 <a id="step-5" class="anchor" href="#step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 5</h2>
@@ -290,7 +287,7 @@ Yes there is.</p>
 
 <div class="highlight highlight-source-java"><pre>webService<span class="pl-k">.</span>setProxy(webService);</pre></div>
 
-<p>Now we can add <code>before</code>, <code>after</code>, etc. methods for <code>magicMethod</code> in the <code>LoggingAspect</code>.
+<p>Now we can add methods for <code>before</code>, <code>after</code>, etc. of <code>magicMethod</code> in the <code>LoggingAspect</code>.
 The only thing we need to change is the parameter of the annotation to use the new method instead.</p>
 
 <p><strong>Task:</strong> Build a mechanism for counting how often <code>magicMethod</code> has been executed.</p>
@@ -303,6 +300,9 @@ The only thing we need to change is the parameter of the annotation to use the n
 <blockquote>
 <p>If your interception needs include protected/private methods or even constructors, consider the use of Spring-driven native AspectJ weaving instead of Spring's proxy-based AOP framework. This constitutes a different mode of AOP usage with different characteristics, so be sure to make yourself familiar with weaving first before making a decision.</p>
 </blockquote>
+
+<p><a href="https://en.wikipedia.org/wiki/Aspect_weaver#Weaving_in_AspectJ">https://en.wikipedia.org/wiki/Aspect_weaver#Weaving_in_AspectJ</a>
+<a href="http://docs.spring.io/spring/docs/current/spring-framework-reference/html/aop.html#aop-pointcuts-designators">http://docs.spring.io/spring/docs/current/spring-framework-reference/html/aop.html#aop-pointcuts-designators</a></p>
 
 <p>This means unfortunately private methods are not supported with the Spring framework and more sophisticated means are required.</p>
 
