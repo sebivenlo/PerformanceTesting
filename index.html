@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Performancetesting by sebivenlo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Performancetesting</h1>
+      <h2 class="project-tagline"></h2>
+      <a href="https://github.com/sebivenlo/PerformanceTesting" class="btn">View on GitHub</a>
+      <a href="https://github.com/sebivenlo/PerformanceTesting/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/sebivenlo/PerformanceTesting/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="performance-testing-workshop" class="anchor" href="#performance-testing-workshop" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Performance testing workshop</h1>
+
+<p>Ever wondered how fast your code actually is or how "good" a certain algorithm solves a problem compared to an other.</p>
+
+<blockquote>
+<p>"Trust is good, but control is better." (Vladimir Lenin)</p>
+</blockquote>
+
+<p>Measuring the actual performance of code can be difficult to do. In addition, more often than not, it required changes to the business logic to enable the measuring in the first place.</p>
+
+<h2>
+<a id="the-problem" class="anchor" href="#the-problem" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>The Problem</h2>
+
+<p>I want to measure how often a function is called or how long a method call takes.
+<strong>But:</strong> I don't want to modify my existing business logic. This problem is called "Cross-cutting concern".</p>
+
+<h2>
+<a id="scenario" class="anchor" href="#scenario" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Scenario</h2>
+
+<p>Let's think about a scenario here. You have an existing webservice that does some heavy computations. As more and more users access this service, the responses get slow. You want to find out what is taking so long.</p>
+
+<p><strong>Solution: Logging</strong></p>
+
+<h2>
+<a id="step-1" class="anchor" href="#step-1" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 1</h2>
+
+<p>Lets assume we have this webservice.</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">import</span> <span class="pl-smi">java.util.Random</span>;
+
+<span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-en">AwesomeWebService</span> {
+
+    <span class="pl-k">private</span> <span class="pl-k">final</span> <span class="pl-smi">Random</span> random;
+
+    <span class="pl-k">public</span> <span class="pl-en">AwesomeWebService</span>() {
+        random <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">Random</span>();
+    }
+
+    <span class="pl-k">public</span> <span class="pl-k">int</span> <span class="pl-en">getAwesomeData</span>() {
+        <span class="pl-k">int</span> runs <span class="pl-k">=</span> random<span class="pl-k">.</span>nextInt(<span class="pl-c1">300</span>);
+        <span class="pl-k">for</span> (<span class="pl-k">int</span> i <span class="pl-k">=</span> <span class="pl-c1">0</span>; i <span class="pl-k">&lt;</span> runs; i<span class="pl-k">++</span>) {
+            <span class="pl-c">//Simulate expensive method</span>
+            <span class="pl-k">try</span> {
+                <span class="pl-smi">Thread</span><span class="pl-k">.</span>sleep(random<span class="pl-k">.</span>nextInt(<span class="pl-c1">10</span>) <span class="pl-k">+</span> <span class="pl-c1">5</span>);
+            } <span class="pl-k">catch</span> (<span class="pl-smi">InterruptedException</span> ex) {
+            }
+        }
+        <span class="pl-k">int</span> result <span class="pl-k">=</span> random<span class="pl-k">.</span>nextInt();
+        <span class="pl-smi">System</span><span class="pl-k">.</span>out<span class="pl-k">.</span>println(<span class="pl-s"><span class="pl-pds">"</span>result = <span class="pl-pds">"</span></span> <span class="pl-k">+</span> result);
+        <span class="pl-k">return</span> result;
+    }
+}</pre></div>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">public</span> <span class="pl-k">class</span> <span class="pl-en">Main</span> {
+
+    <span class="pl-k">public</span> <span class="pl-k">static</span> <span class="pl-k">void</span> <span class="pl-en">main</span>(<span class="pl-k">String</span>[] <span class="pl-v">args</span>) {
+        <span class="pl-smi">AwesomeWebService</span> webService <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-smi">AwesomeWebService</span>();
+        webService<span class="pl-k">.</span>getAwesomeData();
+    }
+}</pre></div>
+
+<p>Create a maven project with these classes in whatever editor you like and run the main <strong>several times</strong>. Notice that the total time it takes to run can vary from 0 to ~ 4 seconds.</p>
+
+<h2>
+<a id="step-2" class="anchor" href="#step-2" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 2</h2>
+
+<p>Now try to find out why sometimes it takes up to 3 times as long. These lines could help.</p>
+
+<div class="highlight highlight-source-java"><pre>    <span class="pl-k">private</span> <span class="pl-k">int</span> expensiveMethodCounter;
+    expensiveMethodCounter<span class="pl-k">++</span>;
+    <span class="pl-smi">System</span><span class="pl-k">.</span>out<span class="pl-k">.</span>println(<span class="pl-s"><span class="pl-pds">"</span>Expensive method ran <span class="pl-pds">"</span></span> <span class="pl-k">+</span> expensiveMethodCounter <span class="pl-k">+</span> <span class="pl-s"><span class="pl-pds">"</span> times.<span class="pl-pds">"</span></span>);</pre></div>
+
+<p>We now identified that there is some code which is called quite often sometimes and can take a long time.</p>
+
+<p>However, we modified the actual source code of the implementation in order to allow this.
+<strong>-&gt; Not desired</strong></p>
+
+<h2>
+<a id="aspect-oriented-programming-aop" class="anchor" href="#aspect-oriented-programming-aop" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Aspect oriented programming (AOP)</h2>
+
+<p>Aspect oriented programming is a mechanism of separating cross-cutting concerns. It allows to add additional behavior to existing code, without modifying the code itself.</p>
+
+<h2>
+<a id="step-3" class="anchor" href="#step-3" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 3</h2>
+
+<p>Now, because we have created a Maven project in Step 1, we can make use of some magic. (Not actual magic, but Maven)</p>
+
+<ul>
+<li>Delete the three lines added in Step 2</li>
+<li>Add the following Maven dependencies to the POM file:</li>
+</ul>
+
+<div class="highlight highlight-text-xml"><pre>&lt;<span class="pl-ent">dependencies</span>&gt;
+  &lt;<span class="pl-ent">dependency</span>&gt;
+      &lt;<span class="pl-ent">groupId</span>&gt;org.springframework&lt;/<span class="pl-ent">groupId</span>&gt;
+      &lt;<span class="pl-ent">artifactId</span>&gt;spring-aop&lt;/<span class="pl-ent">artifactId</span>&gt;
+      &lt;<span class="pl-ent">version</span>&gt;4.3.3.RELEASE&lt;/<span class="pl-ent">version</span>&gt;
+  &lt;/<span class="pl-ent">dependency</span>&gt;
+  &lt;<span class="pl-ent">dependency</span>&gt;
+      &lt;<span class="pl-ent">groupId</span>&gt;org.springframework&lt;/<span class="pl-ent">groupId</span>&gt;
+      &lt;<span class="pl-ent">artifactId</span>&gt;spring-context&lt;/<span class="pl-ent">artifactId</span>&gt;
+      &lt;<span class="pl-ent">version</span>&gt;4.3.3.RELEASE&lt;/<span class="pl-ent">version</span>&gt;
+  &lt;/<span class="pl-ent">dependency</span>&gt;
+  &lt;<span class="pl-ent">dependency</span>&gt;
+      &lt;<span class="pl-ent">groupId</span>&gt;org.springframework&lt;/<span class="pl-ent">groupId</span>&gt;
+      &lt;<span class="pl-ent">artifactId</span>&gt;spring-core&lt;/<span class="pl-ent">artifactId</span>&gt;
+      &lt;<span class="pl-ent">version</span>&gt;4.3.3.RELEASE&lt;/<span class="pl-ent">version</span>&gt;
+  &lt;/<span class="pl-ent">dependency</span>&gt;
+  &lt;<span class="pl-ent">dependency</span>&gt;
+      &lt;<span class="pl-ent">groupId</span>&gt;cglib&lt;/<span class="pl-ent">groupId</span>&gt;
+      &lt;<span class="pl-ent">artifactId</span>&gt;cglib&lt;/<span class="pl-ent">artifactId</span>&gt;
+      &lt;<span class="pl-ent">version</span>&gt;3.2.4&lt;/<span class="pl-ent">version</span>&gt;
+  &lt;/<span class="pl-ent">dependency</span>&gt;
+  &lt;<span class="pl-ent">dependency</span>&gt;
+      &lt;<span class="pl-ent">groupId</span>&gt;org.aspectj&lt;/<span class="pl-ent">groupId</span>&gt;
+      &lt;<span class="pl-ent">artifactId</span>&gt;aspectjrt&lt;/<span class="pl-ent">artifactId</span>&gt;
+      &lt;<span class="pl-ent">version</span>&gt;1.8.9&lt;/<span class="pl-ent">version</span>&gt;
+  &lt;/<span class="pl-ent">dependency</span>&gt;
+  &lt;<span class="pl-ent">dependency</span>&gt;
+      &lt;<span class="pl-ent">groupId</span>&gt;org.aspectj&lt;/<span class="pl-ent">groupId</span>&gt;
+      &lt;<span class="pl-ent">artifactId</span>&gt;aspectjweaver&lt;/<span class="pl-ent">artifactId</span>&gt;
+      &lt;<span class="pl-ent">version</span>&gt;1.8.9&lt;/<span class="pl-ent">version</span>&gt;
+  &lt;/<span class="pl-ent">dependency</span>&gt;
+&lt;/<span class="pl-ent">dependencies</span>&gt;</pre></div>
+
+<ul>
+<li>Build project with dependencies</li>
+<li>Create a folder called <code>resources</code> in <code>&lt;projectRoot&gt;/src/main/</code>
+</li>
+<li>Create an XML file <code>context.xml</code> in this folder</li>
+<li>Give it this content:</li>
+</ul>
+
+<div class="highlight highlight-text-xml"><pre>&lt;?<span class="pl-ent">xml</span><span class="pl-e"> version</span>=<span class="pl-s"><span class="pl-pds">"</span>1.0<span class="pl-pds">"</span></span><span class="pl-e"> encoding</span>=<span class="pl-s"><span class="pl-pds">"</span>UTF-8<span class="pl-pds">"</span></span>?&gt;
+&lt;<span class="pl-ent">beans</span> <span class="pl-e">xmlns</span>=<span class="pl-s"><span class="pl-pds">"</span>http://www.springframework.org/schema/beans<span class="pl-pds">"</span></span>
+       <span class="pl-e">xmlns</span><span class="pl-e">:</span><span class="pl-e">xsi</span>=<span class="pl-s"><span class="pl-pds">"</span>http://www.w3.org/2001/XMLSchema-instance<span class="pl-pds">"</span></span>
+       <span class="pl-e">xmlns</span><span class="pl-e">:</span><span class="pl-e">aop</span>=<span class="pl-s"><span class="pl-pds">"</span>http://www.springframework.org/schema/aop<span class="pl-pds">"</span></span>
+       <span class="pl-e">xsi</span><span class="pl-e">:</span><span class="pl-e">schemaLocation</span>=<span class="pl-s"><span class="pl-pds">"</span>http://www.springframework.org/schema/beans</span>
+<span class="pl-s">    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd</span>
+<span class="pl-s">    http://www.springframework.org/schema/aop</span>
+<span class="pl-s">    http://www.springframework.org/schema/aop/spring-aop-3.0.xsd <span class="pl-pds">"</span></span>&gt;
+
+    &lt;<span class="pl-ent">aop</span><span class="pl-ent">:</span><span class="pl-ent">aspectj-autoproxy</span> /&gt;
+
+    &lt;<span class="pl-ent">bean</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">"</span>awesomeWebService<span class="pl-pds">"</span></span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>packagename.AwesomeWebService<span class="pl-pds">"</span></span>/&gt;
+
+    <span class="pl-c">&lt;!-- Aspect --&gt;</span>
+    &lt;<span class="pl-ent">bean</span> <span class="pl-e">id</span>=<span class="pl-s"><span class="pl-pds">"</span>loggingAspect<span class="pl-pds">"</span></span> <span class="pl-e">class</span>=<span class="pl-s"><span class="pl-pds">"</span>logging.LoggingAspect<span class="pl-pds">"</span></span>/&gt;
+&lt;/<span class="pl-ent">beans</span>&gt;</pre></div>
+
+<ul>
+<li>Replace <code>packagename</code> with the name of your actual package</li>
+<li>Create a package called <code>logging</code> in <code>Source packages</code>
+</li>
+<li>Create a class called <code>LoggingAspect</code> in the <code>logging</code> package</li>
+</ul>
+
+<p>Now you have the basic setup to start using AOP.</p>
+
+<h2>
+<a id="step-4" class="anchor" href="#step-4" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 4</h2>
+
+<p>Now we will make use of the spring AOP framework that we just added via Maven.</p>
+
+<h5>
+<a id="main-class" class="anchor" href="#main-class" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Main class</h5>
+
+<ul>
+<li>Add <code>ApplicationContext appContext = new ClassPathXmlApplicationContext("context.xml");</code> as the first line in the main method
+
+<ul>
+<li>Replace example with the name of your XML file</li>
+</ul>
+</li>
+<li>Now we have to get the bean that knows about AOP and use it as our webservice</li>
+<li>Replace the constructor call of <code>AwesomeWebService</code> with <code>appContext.getBean("awesomeWebService");</code> and cast the result to an <code>AwesomeWebService</code>
+</li>
+</ul>
+
+<h5>
+<a id="loggingaspect-class" class="anchor" href="#loggingaspect-class" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>LoggingAspect class</h5>
+
+<ul>
+<li>Import these packages in <code>LoggingAspect</code>.</li>
+</ul>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">import</span> <span class="pl-smi">org.aspectj.lang.annotation.*</span>;</pre></div>
+
+<ul>
+<li>Annotate the class with <code>@Aspect</code>
+</li>
+<li>Create <code>public void logBeforeGetAwesomeData()</code>
+</li>
+<li>Annotate this method with <code>@Before("execution(* packagename.AwesomeWebService.getAwesomeData(..))")</code>
+
+<ul>
+<li>Replace package name with the name of your actual package</li>
+</ul>
+</li>
+<li>Now you can write some logging in the <code>logBeforeGetAwesomeData</code> method</li>
+<li><p>It should appear in the console before the result of <code>AwesomeWebService.getAwesomeData</code></p></li>
+<li><p>Add a similar annotation (think about the annotation keyword to use) to a new method <code>public void logAfterGetAwesomeData()</code></p></li>
+<li>See when logging of this method appears in the console</li>
+</ul>
+
+<p>We can use these two methods to measure how long a method executes. Just start a timer in the <code>Before</code> and stop it in the <code>After</code>. Try it out!</p>
+
+<h2>
+<a id="step-5" class="anchor" href="#step-5" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 5</h2>
+
+<p>This all sounds a bit complicated. Is there an easier way of doing this?
+Yes there is.</p>
+
+<ul>
+<li>Create <code>public Object logAroundGetAwesomeData() throws Throwable</code>
+</li>
+<li>Annotate it as the before and after (think about the annotation keyword to use)</li>
+<li>Add <code>ProceedingJoinPoint joinPoint</code> as a parameter</li>
+<li>The before and after functionality is split by the line <code>joinPoint.proceed();</code>
+
+<ul>
+<li>Store the result of this on an <code>Object result</code> and return this at the end of the function</li>
+<li>Think about why it throws a <code>Throwable</code>?</li>
+<li>Catch the <code>Throwable</code>, make sure your business logic continues (stop timers, log message) and then rethrow the exception
+
+<ul>
+<li>Think about what <code>result</code> contains?</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>Implement the same time-logging as you did with the two separate functions at the end of Step 4 (and uncomment them to prevent log diarrhea ☺ )</li>
+</ul>
+
+<h2>
+<a id="step-6-advanced" class="anchor" href="#step-6-advanced" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Step 6 (Advanced)</h2>
+
+<p>This is fine for measuring and testing one method. It also allows for more sophisticated things like measuring how often a method has been executed. But there is one limitation to this.</p>
+
+<p>Let's assume we extend our webservice with a method that does some more elaborate calculations and fetches more data, etc. It could look something like this:</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">public</span> <span class="pl-k">void</span> magicMethod() {
+  <span class="pl-c">//magical things happen here</span>
+  <span class="pl-k">try</span> {
+    <span class="pl-smi">Thread</span><span class="pl-k">.</span>sleep(random<span class="pl-k">.</span>nextInt(<span class="pl-c1">10</span>) <span class="pl-k">+</span> <span class="pl-c1">5</span>);
+  } <span class="pl-k">catch</span> (<span class="pl-smi">InterruptedException</span> ex) {
+  }
+}</pre></div>
+
+<p>Which we would use like this in our <code>getAwesomeData</code></p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">for</span> (<span class="pl-k">int</span> i <span class="pl-k">=</span> <span class="pl-c1">0</span>; i <span class="pl-k">&lt;</span> runs; i<span class="pl-k">++</span>) {
+  <span class="pl-c">//Simulate expensive method</span>
+  magicMethod();
+}</pre></div>
+
+<p>If we now want to also log and measure the <code>magicMethod</code>, we will run into some problems. In the <code>main</code> method, we defined our bean which is aware of the AOP and call the <code>getAwesomeData</code> method on this bean. This bean acts as a proxy to our actual <code>AwesomeWebService</code> object and allows the magic of AOP to happen.</p>
+
+<p>Calling a method as <code>magicMethod();</code> is logically the same as calling it as <code>this.magicMethod()</code>. Because this is the case, we can not easily use AOP on a method that is called inside another method. This is because the proxy bean is not the same as <code>this</code> inside the <code>AwesomeWebService</code>.</p>
+
+<p>So in order to allow AOP to work with methods that are called by other methods, we need to delegate the method call to the proxy as well. Not nice because strictly speaking, we now modify the business logic. But at least the code is now not being polluted as much as with the earlier solution.</p>
+
+<p>In order to use this, we need to add a proxy to the <code>AwesomeWebService</code>.</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">private</span> <span class="pl-smi">AwesomeWebService</span> proxy <span class="pl-k">=</span> <span class="pl-v">this</span>;</pre></div>
+
+<p>The next step is to replace the virtual <code>this</code> with the proxy object when calling functions.</p>
+
+<div class="highlight highlight-source-java"><pre><span class="pl-k">for</span> (<span class="pl-k">int</span> i <span class="pl-k">=</span> <span class="pl-c1">0</span>; i <span class="pl-k">&lt;</span> runs; i<span class="pl-k">++</span>) {
+  <span class="pl-c">//Simulate expensive method</span>
+  proxy<span class="pl-k">.</span>magicMethod();
+}</pre></div>
+
+<p>The last step is to set the proxy Object in the <code>main</code> method.</p>
+
+<div class="highlight highlight-source-java"><pre>webService<span class="pl-k">.</span>setProxy(webService);</pre></div>
+
+<p>Now we can add <code>before</code>, <code>after</code>, etc. methods for <code>magicMethod</code> in the <code>LoggingAspect</code>.
+The only thing we need to change is the parameter of the annotation to use the new method instead.</p>
+
+<p><strong>Task:</strong> Build a mechanism for counting how often <code>magicMethod</code> has been executed.</p>
+
+<hr>
+
+<h4>
+<a id="limitations" class="anchor" href="#limitations" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Limitations</h4>
+
+<blockquote>
+<p>If your interception needs include protected/private methods or even constructors, consider the use of Spring-driven native AspectJ weaving instead of Spring's proxy-based AOP framework. This constitutes a different mode of AOP usage with different characteristics, so be sure to make yourself familiar with weaving first before making a decision.</p>
+</blockquote>
+
+<p>This means unfortunately private methods are not supported with the Spring framework and more sophisticated means are required.</p>
+
+<hr>
+
+<h5>
+<a id="alda-project" class="anchor" href="#alda-project" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>ALDA project</h5>
+
+<p>The NetBeans project for Mr. van Odenhoven can be found <a href="https://www.fontysvenlo.org/svnp/2310309/sortingPerformance">here</a>.</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/sebivenlo/PerformanceTesting">Performancetesting</a> is maintained by <a href="https://github.com/sebivenlo">sebivenlo</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
