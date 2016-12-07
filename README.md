@@ -1,7 +1,4 @@
-# Performance testing workshop
 Ever wondered how fast your code actually is or how "good" a certain algorithm solves a problem compared to an other.
-
-> "Trust is good, but control is better." (Vladimir Lenin)
 
 Measuring the actual performance of code can be difficult to do. In addition, more often than not, it required changes to the business logic to enable the measuring in the first place.
 
@@ -53,15 +50,21 @@ public class Main {
     }
 }
 ```
-Create a maven project with these classes in whatever editor you like and run the main **several times**. Notice that the total time it takes to run can vary from 0 to ~ 4 seconds.
+Create a maven java application project with these classes in whatever editor you like and run the main **several times**. Notice that the total time it takes to run can vary from 0 to ~ 4 seconds.
 
 ## Step 2
-Now try to find out why sometimes it takes up to 3 times as long. These lines could help.
+Now try to find out why sometimes it takes up to 3 times as long. These statements could help. They are to be used at different places in the code.
 
 ```java
-	private int expensiveMethodCounter;
-	expensiveMethodCounter++;
-	System.out.println("Expensive method ran " + expensiveMethodCounter + " times.");
+private int expensiveMethodCounter;
+```
+
+```java
+expensiveMethodCounter++;
+```
+
+```java
+System.out.println("Expensive method ran " + expensiveMethodCounter + " times.");
 ```
 
 We now identified that there is some code which is called quite often sometimes and can take a long time.
@@ -149,7 +152,6 @@ Now we will make use of the spring AOP framework that we just added via Maven.
 
 ##### Main class
 * Add `ApplicationContext appContext = new ClassPathXmlApplicationContext("context.xml");` as the first line in the main method
-	* Replace example with the name of your XML file
 * Now we have to get the bean that knows about AOP and use it as our webservice
 * Replace the constructor call of `AwesomeWebService` with `appContext.getBean("awesomeWebService");` and cast the result to an `AwesomeWebService`
 
@@ -171,7 +173,7 @@ import org.aspectj.lang.annotation.*;
 * Add a similar annotation (think about the annotation keyword to use) to a new method `public void logAfterGetAwesomeData()`
 * See when logging of this method appears in the console
 
-We can use these two methods to measure how long a method executes. Just start a timer in the `Before` and stop it in the `After`. Try it out!
+We can use these two methods to measure how long a method executes. Just start a timer in the `Before` and stop it in the `After`. Try it out! [This][1] can help you.
 
 
 ## Step 5
@@ -248,8 +250,12 @@ The only thing we need to change is the parameter of the annotation to use the n
 #### Limitations
 > If your interception needs include protected/private methods or even constructors, consider the use of Spring-driven native AspectJ weaving instead of Spring's proxy-based AOP framework. This constitutes a different mode of AOP usage with different characteristics, so be sure to make yourself familiar with weaving first before making a decision.
 
+http://docs.spring.io/spring/docs/current/spring-framework-reference/html/aop.html#aop-pointcuts-designators
+
 This means unfortunately private methods are not supported with the Spring framework and more sophisticated means are required.
 
 ---
 ##### ALDA project
 The NetBeans project for Mr. van Odenhoven can be found [here](https://www.fontysvenlo.org/svnp/2310309/sortingPerformance).
+
+[1]:https://docs.oracle.com/javase/7/docs/api/java/lang/System.html#nanoTime()
