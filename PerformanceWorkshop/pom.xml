@@ -14,32 +14,32 @@
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-aop</artifactId>
-            <version>4.3.3.RELEASE</version>
+            <version>4.3.19.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
-            <version>4.3.3.RELEASE</version>
+            <version>4.3.19.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-core</artifactId>
-            <version>4.3.3.RELEASE</version>
+            <version>4.3.19.RELEASE</version>
         </dependency>
         <dependency>
             <groupId>cglib</groupId>
             <artifactId>cglib</artifactId>
-            <version>3.2.4</version>
+            <version>3.2.8</version>
         </dependency>
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjrt</artifactId>
-            <version>1.8.9</version>
+            <version>1.9.1</version>
         </dependency>
         <dependency>
             <groupId>org.aspectj</groupId>
             <artifactId>aspectjweaver</artifactId>
-            <version>1.8.9</version>
+            <version>1.9.1</version>
         </dependency>
     </dependencies>
     <name>PerformanceWorkshop</name>
